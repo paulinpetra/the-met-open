@@ -9,7 +9,8 @@ export default function Home() {
           alt="The Met Museum Entrance"
           fill //stretches the image to fill the parent container(replaces w and h)
           className="object-cover"
-          priority //load this first
+          loading="eager"
+          preload={true}
         />
 
         {/* Overlay on image */}
@@ -27,7 +28,19 @@ export default function Home() {
           </p>
         </div>
       </section>
-      <section>cards...</section>
+      {/* break out grid later, maybe also cards */}
+      <section>
+        <h2>Featured Artworks</h2>
+        <ul className="grid grid-cols-[repeat(auto-fill, minmax(35ch,1fr))] gap-6 ">
+          {artworks.map((artwork) =>(
+          <li key={artwork.id}><div>
+            <h3>{artwork.name}</h3>
+            {/* can be rendered condionally artwork.image?  */}
+            <Image className="w-full" src={artwork.image ??} alt="" width={100} height={100} />
+          </div></li>))
+          }
+        </ul>
+      </section>
     </main>
   );
 }

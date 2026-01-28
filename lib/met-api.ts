@@ -1,0 +1,57 @@
+import { MetArtwork, MetSearchResponse } from "./met-types";
+
+const BASE_URL = "https://collectionapi.metmuseum.org/public/collection/v1";
+const ASIAN_ART_DEPARTMENT_ID = 6;
+
+/*
+  limit fetch to highlighted Asian Art artworks that have images
+ */
+const REVALIDATE_TIME = 60 * 60 * 24; // cache for 24 hours
+
+export async function getAsianArtObjects(
+  limit: number = 12, //default to 12 artworks but can be overridden
+): Promise<MetArtwork[]> {
+  //step 1. search asian department for highlighted artworks with images
+  const searchRes = await fetch(
+    `${BASE_URL}/search?departmentId =${ASIAN_ART_DEPARTMENT_ID}&isHighlight=true&hasImages=true&q=*`,
+    {
+      next: { revalidate: REVALIDATE_TIME },
+    },
+  );
+  if (!searchRes.ok) {
+    throw new Error("Failed to fetch Asian Art search results");
+  }
+  const searchData: MetSearchResponse = await searchRes.json();
+  // If searchData.objectIDs is null/undefined:
+
+  if (!searchData.objectIDs || searchData.objectIDs.length === 0) {
+    return []; //early return, no results
+  }
+
+  //step 2. Limit how many objects we fetch
+  const objectIDs = searchData.objectIDs.slice(0, limit);
+
+  //step 3. fetch each object's details in parallel
+  const artworks = await Promise.all(
+    objectIDs.map(async (id) => {
+      const res = await fetch(`${BASE_URL}/objects/${id}`, {
+        next: { revalidate: REVALIDATE_TIME },
+      });
+
+      if (!res.ok) return null;
+      const data = await res.json();
+
+      if (!data.primaryImageSmall) return null;
+
+      return {
+        objectID: data.objectID,
+        title: data.title,
+        primaryImageSmall: data.primaryImageSmall,
+        artistDisplayName: data.artistDisplayName,
+      } satisfies MetArtwork; //type satisfaction(TypeScript verifies all properties exist and match type unlike as)
+    }),
+  );
+
+  //4.remove null and failed fetches by filtering falsy values
+  return artworks.filter((art): art is MetArtwork => art !== null);
+}

@@ -1,4 +1,4 @@
-import { MetArtwork, MetSearchResponse } from "./met-types";
+import { MetArtwork, MetArtworkDetail, MetSearchResponse } from "./met-types";
 
 const BASE_URL = "https://collectionapi.metmuseum.org/public/collection/v1";
 const ASIAN_ART_DEPARTMENT_ID = 6;
@@ -31,7 +31,7 @@ export async function getAsianArtObjects(
   //STEP 2. Limit how many objects we fetch but over fetch since some are filterd out later
   const objectIDs = searchData.objectIDs.slice(0, limit * 2);
 
-  //STEP 3. fetch each object's details in parallel
+  //STEP 3. fetch each object's details in parallel (for the list)
   const artworks = await Promise.all(
     objectIDs.map(async (id) => {
       const res = await fetch(`${BASE_URL}/objects/${id}`, {
@@ -43,6 +43,7 @@ export async function getAsianArtObjects(
 
       if (!data.primaryImageSmall) return null;
 
+      //only return whats necessaryfor the artwork card
       return {
         objectID: data.objectID,
         title: data.title,
@@ -57,4 +58,34 @@ export async function getAsianArtObjects(
   return artworks
     .filter((art): art is MetArtwork => art !== null)
     .slice(0, limit);
+}
+
+/* ------------------------------------------------------------------ */
+/* New fetch for single artwork on Detail Page  
+fetching the full details by the object id                  */
+/* ------------------------------------------------------------------ */
+
+export async function getAsianArtObjectById(objectID: number, ): Promise<MetArtworkDetail> {
+  const res = await fetch(`${BASE_URL}/objects/${objectID}`, {
+    next: { revalidate: REVALIDATE_TIME },
+  });
+  
+  if (!res.ok) {
+    throw new Error(`Failed to fetch artwork with ID ${objectID}`);
+  } 
+  const data = await res.json();
+
+  return {
+    objectID: data.objectID,
+    title: data.title,
+    primaryImageSmall: data.primaryImageSmall,
+    artistDisplayName: data.artistDisplayName,
+    culture: data.culture,
+    period: data.period,
+    medium: data.medium,
+    dimensions: data.dimensions,
+    objectDate: data.objectDate,
+    creditLine: data.creditLine,
+  } satisfies MetArtworkDetail; 
+
 }

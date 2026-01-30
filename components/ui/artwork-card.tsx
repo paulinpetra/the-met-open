@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { MetArtwork } from "@/lib/met-types";
 
 type ArtworkCardsProps = {
@@ -8,6 +9,9 @@ type ArtworkCardsProps = {
 export default function ArtworkCard({ artwork }: ArtworkCardsProps) {
   return (
     <li className="rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-md transition">
+      <Link 
+      href={`/artwork/${artwork.objectID}`}
+      className="block h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900">
       <div className="relative aspect-square">
         <Image
           src={artwork.primaryImageSmall}
@@ -26,6 +30,7 @@ export default function ArtworkCard({ artwork }: ArtworkCardsProps) {
           {artwork.artistDisplayName || "Unknown artist"}
         </p>
       </div>
+      </Link>
     </li>
   );
 }

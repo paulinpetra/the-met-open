@@ -20,7 +20,7 @@ export async function getAsianArtObjects(
   );
   if (!searchRes.ok) {
     throw new Error("Failed to fetch Asian Art search results");
-  }
+  }//Next.js will show a default generic error page if there is no error file in the folder
   const searchData: MetSearchResponse = await searchRes.json();
   // If searchData.objectIDs is null/undefined:
 

@@ -1,24 +1,21 @@
 import Image from "next/image";
+import { notFound } from "next/navigation";
 import { getAsianArtObjectById } from "@/lib/met-api";
 import type { MetArtworkDetail } from "@/lib/met-types";
+
 
 type ArtworkDetailPageProps = {
   params: Promise<{ id: string }>; 
 };
 
 export default async function ArtworkDetailPage({ params }: ArtworkDetailPageProps) {
-  const resolvedParams = await params;
+  const {id} = await params; //object destructuring, extract the id property into a variable named id
+  const objectID = Number(id);
 
-  const idString = resolvedParams.id?.trim();
-  const objectID = Number(idString);
-
-  if (!idString || Number.isNaN(objectID)) {
-    return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <p className="text-red-500">Invalid artwork ID.</p>
-      </div>
-    );
-  }
+  //validate id, if not whole number or not positive
+  if (!Number.isInteger(objectID) || objectID <= 0) {
+    notFound();
+    }
 
   // fetch artwork details
   const artwork: MetArtworkDetail = await getAsianArtObjectById(objectID);

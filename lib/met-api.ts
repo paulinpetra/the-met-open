@@ -8,6 +8,10 @@ const ASIAN_ART_DEPARTMENT_ID = 6;
  */
 const REVALIDATE_TIME = 60 * 60 * 24; // cache for 24 hours
 
+/* ------------------------------------------------------------------ */
+/* Main fetch for the Home page artwork card grid  
+/* ------------------------------------------------------------------ */
+
 export async function getAsianArtObjects(
   limit: number = 12, //default to 12 artworks but can be overridden
 ): Promise<MetArtwork[]> {
@@ -55,6 +59,66 @@ export async function getAsianArtObjects(
 
   //STEP 4.remove null and failed fetches by filtering falsy values
   //then enforce final limit
+  return artworks
+    .filter((art): art is MetArtwork => art !== null)
+    .slice(0, limit);
+}
+
+/* ------------------------------------------------------------------ */
+/* Function and fetch for the filter buttons                          */
+/* ------------------------------------------------------------------ */
+export async function getAsianArtObjectsByCulture({
+  culture,
+  limit = 12,
+}: {
+  culture?: string; // <-- comes from searchParams
+  limit?: number;
+}): Promise<MetArtwork[]> {
+  const searchRes = await fetch(
+    `${BASE_URL}/search?departmentId=${ASIAN_ART_DEPARTMENT_ID}&hasImages=true&q=*`,
+    {
+      next: { revalidate: REVALIDATE_TIME },
+    },
+  );
+
+  if (!searchRes.ok) {
+    throw new Error("Failed to fetch Asian Art search results");
+  }
+
+  const searchData: MetSearchResponse = await searchRes.json();
+
+  if (!searchData.objectIDs || searchData.objectIDs.length === 0) {
+    return [];
+  }
+
+  const objectIDs = searchData.objectIDs.slice(0, limit * 3); 
+  // 👆 overfetch a bit because we filter some out below
+
+  const artworks = await Promise.all(
+    objectIDs.map(async (id) => {
+      const res = await fetch(`${BASE_URL}/objects/${id}`, {
+        next: { revalidate: REVALIDATE_TIME },
+      });
+
+      if (!res.ok) return null;
+      const data = await res.json();
+
+      if (!data.primaryImageSmall) return null;
+
+      // 🔹 NEW: culture filter (only keep matching ones)
+      if (culture && data.culture !== culture) {
+        return null;
+      }
+
+      return {
+        objectID: data.objectID,
+        title: data.title,
+        primaryImageSmall: data.primaryImageSmall,
+        artistDisplayName: data.artistDisplayName,
+      } satisfies MetArtwork;
+    }),
+  );
+
   return artworks
     .filter((art): art is MetArtwork => art !== null)
     .slice(0, limit);

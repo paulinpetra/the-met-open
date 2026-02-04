@@ -71,7 +71,7 @@ export async function getAsianArtObjectsByCulture({
   culture,
   limit = 12,
 }: {
-  culture?: string; // <-- comes from searchParams
+  culture?: string; 
   limit?: number;
 }): Promise<MetArtwork[]> {
   const searchRes = await fetch(
@@ -92,7 +92,6 @@ export async function getAsianArtObjectsByCulture({
   }
 
   const objectIDs = searchData.objectIDs.slice(0, limit * 3); 
-  // 👆 overfetch a bit because we filter some out below
 
   const artworks = await Promise.all(
     objectIDs.map(async (id) => {
@@ -105,7 +104,7 @@ export async function getAsianArtObjectsByCulture({
 
       if (!data.primaryImageSmall) return null;
 
-      // 🔹 NEW: culture filter (only keep matching ones)
+      // culture filter
       if (culture && data.culture !== culture) {
         return null;
       }

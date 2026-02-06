@@ -1,10 +1,22 @@
 import Image from "next/image";
-import { getAsianArtObjects } from "@/lib/met-api";
+import { getAsianArtObjects, getAsianArtObjectsByCulture } from "@/lib/met-api";
 import ArtworkGrid from "@/components/layout/artwork-grid";
+import CultureFilter from "@/components/ui/culture-filter";
 
-export default async function Home() {
-  const artworks = await getAsianArtObjects(12);
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const params = await searchParams;
 
+  const culture = typeof params.culture === "string" ? params.culture : undefined;
+
+  const artworks = await getAsianArtObjectsByCulture({
+    culture,
+    limit: 12,
+  });
+  
   return (
     <main>
       {/* HERO */}
@@ -32,10 +44,18 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ARTWORK GRID */}
+{/* FILTER BUTTONS (URL STATE) */}
+      
+      <section className="container mx-auto px-4 py-8">
+        <CultureFilter culture={culture} />
+      </section>
+
+{/* ARTWORK GRID */}
 
       <section className="container mx-auto px-4 py-16">
-        <h2 className="text-3xl font-bold mb-8">Featured Asian Artworks</h2>
+        <h2 className="text-3xl font-bold mb-8">
+        {culture ? `${culture} Artworks` : "Featured Asian Artworks"}
+        </h2>
         <ArtworkGrid artworks={artworks} />
       </section>
     </main>

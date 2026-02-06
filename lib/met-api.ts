@@ -3,6 +3,7 @@ import { MetArtwork, MetArtworkDetail, MetSearchResponse } from "./met-types";
 const BASE_URL = "https://collectionapi.metmuseum.org/public/collection/v1";
 const ASIAN_ART_DEPARTMENT_ID = 6;
 
+//Change the Asian Focus to a broader one!!!!!!
 /*
   limit fetch to highlighted Asian Art artworks that have images
  */
@@ -90,8 +91,10 @@ export async function getAsianArtObjectsByCulture({
   if (!searchData.objectIDs || searchData.objectIDs.length === 0) {
     return [];
   }
+//over-fetch more if culture filter is applied to account for api, maybe improve later?
+const fetchCount = culture === "Korean" ? limit * 20 : culture ? limit * 10 : limit * 2;
 
-  const objectIDs = searchData.objectIDs.slice(0, limit * 3); 
+  const objectIDs = searchData.objectIDs.slice(0, fetchCount); 
 
   const artworks = await Promise.all(
     objectIDs.map(async (id) => {
@@ -104,10 +107,40 @@ export async function getAsianArtObjectsByCulture({
 
       if (!data.primaryImageSmall) return null;
 
-      // culture filter
-      if (culture && data.culture !== culture) {
-        return null;
-      }
+// culture filter - api culutre field is a bit messy so filter needs to be flexible and case insensitive
+if (culture) {
+  const wanted = culture.toLowerCase();
+
+  // Normalize a bunch of fields the API might use
+  const cultureField = (data.culture || "").toLowerCase();
+  const geoField = (data.geography || "").toLowerCase();
+  const countryField = (data.country || "").toLowerCase();
+  const regionField = (data.region || "").toLowerCase();
+  const dynastyField = (data.dynasty || "").toLowerCase();
+
+  // Generic match: does ANY field include the wanted word?
+  let matches =
+    cultureField.includes(wanted) ||
+    geoField.includes(wanted) ||
+    countryField.includes(wanted) ||
+    regionField.includes(wanted);
+
+  // Extra fuzzy rules for Korea specifically - Korean filter still not working!
+  if (wanted === "korean") {
+    matches =
+      matches ||
+      cultureField.includes("korea") ||
+      countryField.includes("korea") ||
+      regionField.includes("korea") ||
+      dynastyField.includes("joseon") ||
+      dynastyField.includes("chos"); 
+  }
+
+  if (!matches) {
+    return null;
+  }
+}
+
 
       return {
         objectID: data.objectID,
@@ -124,7 +157,7 @@ export async function getAsianArtObjectsByCulture({
 }
 
 /* ------------------------------------------------------------------ */
-/* New fetch for single artwork on Detail Page  
+/* Fetch for single artwork on Detail Page  
 fetching the full details by the object id                  */
 /* ------------------------------------------------------------------ */
 

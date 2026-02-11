@@ -9,9 +9,9 @@ export default async function Home({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const params = await searchParams;
-
+//extract a string, only one choice allowed
   const culture = typeof params.culture === "string" ? params.culture : undefined;
-
+//use that string in the fetch
   const artworks = await getAsianArtObjectsByCulture({
     culture,
     limit: 12,

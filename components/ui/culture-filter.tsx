@@ -11,7 +11,7 @@ type FilterButtonProps = {
       href={href}
       className={`px-4 py-2 rounded-full border transition ${
         active
-          ? "bg-black text-white border-black"
+          ? "bg-amber-400 text-black border-amber-400"
           : "bg-white text-black border-neutral-300 hover:bg-neutral-100"
       }`}
     >

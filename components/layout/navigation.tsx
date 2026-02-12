@@ -2,7 +2,7 @@ import Link from "next/link";
 //all caps common for constants
 const navigationLinks = [
   { name: "Home", href: "/" },
-  { name: "About", href: "/about" },
+  { name: "Favorites", href: "/favorites" },
   { name: "Contact", href: "/contact" },
 ];
 

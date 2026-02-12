@@ -7,12 +7,12 @@ import { NextResponse } from "next/server";
 const favoritesStore = new Map<string, Set<number>>()
 
 export async function POST(request: Request) {
-      const { objectID, userId = "guest" } = await request.json();
-      
+const { objectID, userId = "guest" } = await request.json();//destructure objectID and userId from request body, default userId to "guest"
+//validate objectID      
      if (typeof objectID !== "number") {
     return NextResponse.json({ error: "Invalid objectID" }, { status: 400 })
   }
-
+//get current favorites for user, or initialize empty set if none
     const current = favoritesStore.get(userId) ?? new Set<number>()
   
    // toggle heart
@@ -25,9 +25,9 @@ export async function POST(request: Request) {
     current.add(objectID)
     liked = true
   }
-
+//update store with new favorites set 
     favoritesStore.set(userId, current)
-
+//return new state
     return NextResponse.json({
     liked,
     favorites: Array.from(current),//convert set to array for JSON serialization
@@ -36,9 +36,10 @@ export async function POST(request: Request) {
 
 //fetch all favorites for a user
 export async function GET(request: Request) {
+  //extract userId from query params, default to "guest"
   const { searchParams } = new URL(request.url)
   const userId = searchParams.get("userId") ?? "guest"
-
+//get current favorites for user, or empty set if none
   const current = favoritesStore.get(userId) ?? new Set<number>()
 
   return NextResponse.json({

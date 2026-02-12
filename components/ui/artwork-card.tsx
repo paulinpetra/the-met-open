@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { MetArtwork } from "@/lib/met-types";
+import  {LikeButton} from "./like-button";
 
 type ArtworkCardsProps = {
   artwork: MetArtwork;
@@ -8,7 +9,7 @@ type ArtworkCardsProps = {
 
 export default function ArtworkCard({ artwork }: ArtworkCardsProps) {
   return (
-    <li className="rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-md transition">
+    <li className="rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-md transition relative">
       <Link 
       href={`/artwork/${artwork.objectID}`}
       className="block h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900">
@@ -20,6 +21,10 @@ export default function ArtworkCard({ artwork }: ArtworkCardsProps) {
           className="object-cover"
           sizes="(max-width: 767px) 50vw, (max-width: 1023px) 33vw, 25vw"
         />
+          <div className="absolute top-2 right-2 z-10">
+            <LikeButton objectID={artwork.objectID} />
+          </div>
+
       </div>
 
       <div className="p-4">
